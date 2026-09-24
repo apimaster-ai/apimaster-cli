@@ -1,9 +1,9 @@
-# apimaster-cli
+# apimaster CLI
 
 Test any OpenAI-compatible LLM endpoint from the terminal.
 
 ```bash
-npx apimaster-cli check
+npx @apimaster/cli check
 ```
 
 No dependencies, no build step, Node 18.17+. Works against [APIMaster](https://apimaster.ai/docs)
@@ -28,9 +28,9 @@ need it in CI.
 ## Install
 
 ```bash
-npm install -g apimaster-cli
+npm install -g @apimaster/cli
 # or run it without installing
-npx apimaster-cli check
+npx @apimaster/cli check
 ```
 
 ## Quick start
@@ -168,7 +168,7 @@ clock skew, and endpoint reachability — then tells you what to change.
 ## Use it in CI
 
 ```yaml
-- run: npx apimaster-cli check --json > health.json
+- run: npx @apimaster/cli check --json > health.json
   env:
     APIMASTER_API_KEY: ${{ secrets.APIMASTER_API_KEY }}
 ```
