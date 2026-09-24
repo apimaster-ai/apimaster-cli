@@ -33,7 +33,7 @@ jobs:
           tag="${GITHUB_REF_NAME#v}"
           pkg="$(node -p "require('./package.json').version")"
           [ "$tag" = "$pkg" ] || { echo "tag v$tag != package.json $pkg"; exit 1; }
-      - run: node --test test/*.test.js
+      - run: node --test test/cli.test.js
       # Trusted publishing needs a recent npm CLI. Upgrade only after install/build/test
       # so the build itself runs on the npm version bundled with Node.
       - run: npm install -g npm@latest

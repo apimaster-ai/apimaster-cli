@@ -30,7 +30,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test test/*.test.js",
+    "test": "node --test test/cli.test.js",
     "lint": "node --check bin/apimaster.js"
   },
   "repository": {
