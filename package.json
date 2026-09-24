@@ -1,0 +1,44 @@
+{
+  "name": "apimaster-cli",
+  "version": "0.1.0",
+  "description": "Test any OpenAI-compatible LLM endpoint from the terminal: validate keys, list models, measure latency, probe model identity, generate images and video. Works with APIMaster.ai and any other OpenAI-compatible gateway.",
+  "keywords": [
+    "openai",
+    "openai-compatible",
+    "llm",
+    "cli",
+    "api-key",
+    "latency",
+    "benchmark",
+    "claude-code",
+    "codex",
+    "apimaster"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "bin": {
+    "apimaster": "bin/apimaster.js",
+    "apim": "bin/apimaster.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "lint": "node --check bin/apimaster.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apimaster-ai/apimaster-cli.git"
+  },
+  "homepage": "https://github.com/apimaster-ai/apimaster-cli#readme",
+  "bugs": {
+    "url": "https://github.com/apimaster-ai/apimaster-cli/issues"
+  }
+}
