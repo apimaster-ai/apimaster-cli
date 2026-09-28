@@ -1,6 +1,6 @@
 {
   "name": "@apimaster/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Test any OpenAI-compatible LLM endpoint from the terminal: validate keys, list models, measure latency, probe model identity, generate images and video. Works with APIMaster.ai and any other OpenAI-compatible gateway.",
   "keywords": [
     "openai",

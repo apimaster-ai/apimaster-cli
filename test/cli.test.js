@@ -185,3 +185,28 @@ describe('ui', () => {
     assert.match(lines[0], /A/);
   });
 });
+
+describe('video polling', () => {
+  test('survives a dropped connection and a 502 while polling', async () => {
+    const { pollVideo } = await import('../src/commands/video.js');
+    const { ApiError } = await import('../src/lib/client.js');
+    const answers = [
+      () => { throw new TypeError('fetch failed'); },
+      () => { throw new ApiError(502, 'bad gateway', {}); },
+      () => ({ data: { status: 'in_progress' } }),
+      () => ({ data: { status: 'completed', id: 'task_1' } }),
+    ];
+    let i = 0;
+    const client = { videoStatus: async () => answers[i++]() };
+    const done = await pollVideo(client, 'task_1', { initialDelay: 0, interval: 0 });
+    assert.equal(done.status, 'completed');
+    assert.equal(i, 4);
+  });
+
+  test('still fails fast on a 4xx, which is a real answer', async () => {
+    const { pollVideo } = await import('../src/commands/video.js');
+    const { ApiError } = await import('../src/lib/client.js');
+    const client = { videoStatus: async () => { throw new ApiError(404, 'no such task', {}); } };
+    await assert.rejects(pollVideo(client, 'task_x', { initialDelay: 0, interval: 0 }), /404|no such task/);
+  });
+});

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { Client } from '../lib/client.js';
+import { ApiError, Client } from '../lib/client.js';
 import { EXIT, exitCodeForError } from '../lib/exit.js';
 import { c, heading, kv } from '../lib/ui.js';
 
@@ -12,33 +12,50 @@ Usage
   apimaster video "<prompt>" [options]
 
 Options
-  --model <id>          sora-2 (default), sora-2-pro, kling-v3-motion-control, seedance-2.5, MiniMax-H3
+  --model <id>          seedance-2.5 (default), seedance-2.0, kling-v3-omni, kling-v3-motion-control,
+                        MiniMax-H3, grok-imagine-video-1.5
   --duration <seconds>  4 | 8 | 12 | 16 | 20   (default 4)
-  --resolution <r>      720p (sora-2) | 1024p | 1080p (sora-2-pro only)
+  --resolution <r>      720p (default); higher tiers depend on the model
   --aspect <ratio>      16:9 | 9:16   (default 16:9)
   --ref <url>           reference image for image-to-video
   --out <dir>           download directory (default ./out)
   --no-download         print the content URL only
   --json                machine-readable output
 
-Note
+Notes
+  Video jobs are slow: seedance-2.5 took about 15 minutes for 4 seconds. The command
+  waits up to 30 minutes, and a job that outlives that is not lost - poll it later.
+
   For image-to-video always pass --aspect explicitly. A portrait reference image with
   no aspect flag is treated as 16:9 by the gateway.
 `;
 
-async function pollVideo(client, taskId, { onTick } = {}) {
-  await delay(15000);
-  for (let attempt = 0; attempt < 240; attempt += 1) {
-    const res = await client.videoStatus(taskId);
+export async function pollVideo(client, taskId, { onTick, initialDelay = 15000, interval = 4000 } = {}) {
+  await delay(initialDelay);
+  let failures = 0;
+  for (let attempt = 0; attempt < 435; attempt += 1) {
+    let res;
+    try {
+      res = await client.videoStatus(taskId);
+      failures = 0;
+    } catch (err) {
+      // The job keeps running server-side and is already paid for: a dropped connection or a
+      // 5xx while polling must not throw it away. A 4xx is a real answer, so it does.
+      if (err instanceof ApiError && err.status < 500) throw err;
+      failures += 1;
+      if (failures >= 5) throw err;
+      await delay(interval);
+      continue;
+    }
     const status = res.data?.status;
     onTick?.(status, attempt);
     if (status === 'completed') return res.data;
     if (['failed', 'error', 'cancelled'].includes(status)) {
       throw new Error(`task ${status}: ${JSON.stringify(res.data).slice(0, 300)}`);
     }
-    await delay(4000);
+    await delay(interval);
   }
-  throw new Error('gave up polling after ~16 minutes');
+  throw new Error(`gave up polling after ~30 minutes; the job is not lost, check it later: GET /v1/videos/${taskId}`);
 }
 
 export async function run({ config, flags, positionals, out }) {
@@ -48,7 +65,7 @@ export async function run({ config, flags, positionals, out }) {
     return EXIT.USAGE;
   }
 
-  const model = flags.model || 'sora-2';
+  const model = flags.model || 'seedance-2.5';
   const body = {
     model,
     prompt,
